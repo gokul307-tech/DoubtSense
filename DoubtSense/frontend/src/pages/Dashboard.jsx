@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
@@ -6,15 +6,39 @@ import PageTabs from "../components/PageTabs";
 import StatsCard from "../components/StatsCard";
 
 import { isLoggedIn } from "../utils/auth";
+import api from "../api/api";
 
 function Dashboard() {
   const navigate = useNavigate();
 
+  const [stats, setStats] = useState({
+    total_doubts: 0,
+    pending_doubts: 0,
+    resolved_doubts: 0,
+  });
+
   useEffect(() => {
     if (!isLoggedIn()) {
       navigate("/");
+      return;
     }
+
+    fetchDashboardStats();
   }, [navigate]);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await api.get("/student/dashboard");
+
+      setStats({
+        total_doubts: res.data.total_doubts || 0,
+        pending_doubts: res.data.pending_doubts || 0,
+        resolved_doubts: res.data.resolved_doubts || 0,
+      });
+    } catch (error) {
+      console.error("Failed to load student dashboard:", error);
+    }
+  };
 
   return (
     <>
@@ -51,19 +75,19 @@ function Dashboard() {
         >
           <StatsCard
             title="My Doubts"
-            value="12"
+            value={stats.total_doubts}
             color="#ffffff"
           />
 
           <StatsCard
             title="Pending"
-            value="8"
+            value={stats.pending_doubts}
             color="#ffd43b"
           />
 
           <StatsCard
             title="Resolved"
-            value="4"
+            value={stats.resolved_doubts}
             color="#69db7c"
           />
         </div>
