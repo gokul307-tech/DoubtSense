@@ -178,6 +178,44 @@ def get_student_doubts(
 
     return doubts
 
+# ---------------- STUDENT DASHBOARD ----------------
+
+@app.get("/student/dashboard")
+def student_dashboard(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    student = db.query(models.User).filter(
+        models.User.email == current_user
+    ).first()
+
+    if not student:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
+
+    total_doubts = db.query(models.Doubt).filter(
+        models.Doubt.student_id == student.id
+    ).count()
+
+    pending_doubts = db.query(models.Doubt).filter(
+        models.Doubt.student_id == student.id,
+        models.Doubt.status == "pending"
+    ).count()
+
+    resolved_doubts = db.query(models.Doubt).filter(
+        models.Doubt.student_id == student.id,
+        models.Doubt.status == "resolved"
+    ).count()
+
+    return {
+        "total_doubts": total_doubts,
+        "pending_doubts": pending_doubts,
+        "resolved_doubts": resolved_doubts
+    }
+
 
 # ---------------- TEACHER DASHBOARD ----------------
 
